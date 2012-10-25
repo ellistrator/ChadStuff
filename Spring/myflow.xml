@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow xmlns="http://www.springframework.org/schema/webflow"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd"
+      start-state="login">
+      
+      <!-- Basic Spring webflow XML file
+      		login -> loginEvaluation -> login   // failure 
+      		login -> loginEvaluation -> profileSelector -> customerProfile -> exit
+      		login -> loginEvaluation -> profileSelector -> customerProfile -> upgradeAccount -> businessProfile -> exit
+      		login -> loginEvaluation -> profileSelector -> businessProfile -> exit
+       -->
+      
+      <view-state id="login" view="loginPage" model="loginModel">
+      	<on-entry>
+      		<evaluate expression="loginActions.onEntry" />
+      	</on-entry>
+      	<transition on="submit" to="loginEvaluation" />
+      	<transition on="cancel" to="exit" />
+      </view-state>
+      
+      <!-- Check credentials and proceed or return to login -->
+      <action-state id="loginEvaluation">
+      	<evaluate expression="loginEvaluationActions.evaluate" />
+      	<transition on="success" to="profileSelector"/>
+      	<transition on="failure" to="login"/>
+      </action-state>
+      
+	  <!--  Which page do we show? Business or Customer version? -->
+      <decision-state id="profileSelector">
+      	<if test="${flowScope.user.isBusinessAccount}" then="businessProfile" else="customerProfile"/>
+      </decision-state>
+      
+      <!-- Customer profile page, with option to upgrade address or invoke change address subflow -->
+      <view-state id="customerProfile" view="customerProfilePage" model="customerProfileModel">
+      	<on-entry>
+      		<evaluate expression="customerProfileActions.onEntry" />
+      	</on-entry>
+      	<transition on="upgradeAccount" to="upgradeAccount" />
+      	<transition on="changeAddress" to="changeAddress" />
+      	<transition on="logout" to="exit">
+      		<evaluate expression="securityActions.logout" />
+      	</transition>
+      </view-state>
+      
+      <!-- Upgrade your account? -->
+      <view-state id="upgradeAccount" view="upgradeAccountPage" model="upgradeAccountModel">
+      	<on-entry>
+      		<evaluate expression="loginActions.onEntry" />
+      	</on-entry>
+      	<transition on="submit" to="profileSelector" />
+      	<transition on="cancel" to="exit" />
+      </view-state>
+      
+      <!-- Business profile page -->
+      <view-state id="businessProfile" view="businessProfilePage" model="businessProfileModel">
+      	<on-entry>
+      		<evaluate expression="businessProfileActions.onEntry" />
+      	</on-entry>
+      	<transition on="logout" to="exit">
+      		<evaluate expression="securityActions.logout" />
+      	</transition>
+      </view-state>
+      
+      <!-- Invoke a subflow for change address, defined elsewhere -->
+      <subflow-state id="changeAddress" subflow="changeAddressSubflow" />
+      
+      <!-- Exit the flow -->
+      <end-state id="exit" />
+      
+      <!-- Send any unhandled exceptions to this handler -->
+      <exception-handler bean="myFlowExceptionHandler"/>
+</flow>
