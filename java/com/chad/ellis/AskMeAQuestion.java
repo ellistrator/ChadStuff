@@ -92,7 +92,9 @@ public class AskMeAQuestion
 				System.out.print("Invalid answer you DIMWIT!, try again: ");
 			}
 			else
+			{
 				done = true;
+			}
 		}
 		
 		// All done, output the result
@@ -232,18 +234,12 @@ public class AskMeAQuestion
 			String answerString = (String) answer;
 			if (answerString.equalsIgnoreCase("true") || answerString.equalsIgnoreCase("false")) 
 			{
-				try
-				{
-					this.answer = Boolean.parseBoolean((String) answer);
-				}
-				catch(NumberFormatException e)
-				{
-					// Reset!!
-					this.answer = null;
-				}
+				this.answer = Boolean.parseBoolean((String) answer);
 			}
 			else
+			{
 				this.answer = null;
+			}
 		}
 	}	
 	
